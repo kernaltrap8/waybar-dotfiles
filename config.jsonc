@@ -1,0 +1,155 @@
+// waybar-dotfiles Copyright (C) 2025 kernaltrap8
+// This program comes with ABSOLUTELY NO WARRANTY
+// This is free software, and you are welcome to redistribute it
+// under certain conditions
+
+{
+    "layer": "top",
+    "position": "top",
+    "height": 27,
+    // "width": 1280,
+    "spacing": 0,
+
+    // Modules order
+    "modules-left": ["group/group-taskbar"],
+    "modules-center": ["group/group-media"],
+    "modules-right": ["custom/weather", "clock", "group/group-stats", "group/group-tray"],
+
+    // ===== Group Definitions =====
+    "group/group-media": {
+        "orientation": "inherit",
+        "modules": ["custom/previous", "custom/playpause", "custom/next", "custom/media"]
+    },
+
+    "group/group-stats": {
+        "orientation": "inherit",
+        "drawer": {
+            "transition-duration": 500,
+            "transition-left-to-right": false
+        },
+        "modules": ["custom/statsroot", "temperature#gpu", "temperature", "custom/gpu-pct", "cpu", "memory"]
+    },
+
+    "group/group-tray": {
+        "orientation": "inherit",
+        "drawer": {
+            "transition-duration": 500,
+            "transition-left-to-right": false
+        },
+        "modules": ["custom/trayroot", "tray"]
+    },
+
+    "group/taskbar": {
+        "orientation": "inherit",
+        "drawer": {
+            "transition-duration": 500,
+            "transition-left-to-right": true
+        },
+        "modules": ["custom/taskbarroot", "wlr/taskbar"]
+    },
+
+    "group/group-taskbar": {
+        "orientation": "inherit",
+        "drawer": {
+            "transition-duration": 500,
+            "transition-left-to-right": true
+        },
+        "modules": ["custom/start", "group/taskbar"]
+    },
+
+    // ===== Custom Modules =====
+    "custom/statsroot": { "format": "", "tooltip": false },
+    "custom/trayroot": { "format": "🗁", "tooltip": false },
+    "custom/start": { "format": "", "tooltip": false },
+    "custom/taskbarroot": { "format": "", "tooltip": false },
+
+    "custom/previous": {
+        "format": "󰙣",
+        "on-click": "$HOME/.config/waybar/mediaplayer.sh control previous 2>/dev/null",
+        "tooltip": false
+    },
+    "custom/playpause": {
+        "format": "{}",
+        "return-type": "json",
+        "max-length": 10,
+        "escape": true,
+        "on-click": "$HOME/.config/waybar/mediaplayer.sh control playpause 2>/dev/null",
+        "tooltip": false,
+        "exec": "$HOME/.config/waybar/mediaplayer.sh controlinfo 2>/dev/null"
+    },
+    "custom/next": {
+        "format": "󰙡",
+        "on-click": "$HOME/.config/waybar/mediaplayer.sh control next 2>/dev/null",
+        "tooltip": false
+    },
+    "custom/media": {
+        "format": "{}",
+        "return-type": "json",
+        "max-length": 10000,
+        "format-icons": { "default": "  " },
+        "escape": true,
+        "exec": "$HOME/.config/waybar/mediaplayer.sh mediainfo 2> /dev/null"
+    },
+
+    "custom/weather": {
+        "return-type": "json",
+        "exec": "$HOME/.config/waybar/weather.sh"
+    },
+
+    "custom/gpu-pct": {
+        "exec": "$HOME/.config/waybar/gpupercentage.sh",
+        "format": "GPU: {}%",
+        "tooltip": false
+    },
+
+    "custom/temperature": {
+        "interval": 1,
+        "hwmon-path": ["/sys/class/hwmon/hwmon0/temp1_input"],
+        "format": "C: {temperatureC}°C "
+    },
+    "temperature#gpu": {
+        "interval": 1,
+        "hwmon-path": ["/sys/class/hwmon/hwmon2/temp1_input"],
+        "format": "G: {temperatureC}°C "
+    },
+
+    "custom/statsroot": {
+        "format": "",
+        "tooltip": false
+    },
+
+	"custom/vram": {
+		"format": "{}",
+		"tooltip": false,
+		"return-type": "json",
+		"exec": "$HOME/.config/waybar/gpuvram.sh"
+	},
+
+    // ===== Standard Modules =====
+    "wlr/taskbar": {
+        "ignore-list": ["GLava"],
+        "app_ids-mapping": { "Librewolf": "1Librewolf" },
+        "rewrite": { ".*LibreWolf": " Librewolf", "^IDA.*": "IDAPro" },
+        "sort-by-app-id": true,
+        "format": "{icon}",
+        "icon-size": 15,
+        "icon-theme": "breeze",
+        "tooltip-format": "{title}",
+        "on-click": "minimize-raise",
+        "on-click-middle": "close"
+    },
+
+    "tray": { "icon-size": 18, "spacing": 10 },
+
+    "clock": {
+        "timezone": "America/Chicago",
+        "format": "{:%I:%M %p}",
+        "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
+        "format-alt": "{:%m/%d/%Y} "
+    },
+
+    "cpu": { "interval": 1, "format": "CPU: {usage}% ", "tooltip": false },
+    "memory": { "interval": 1, "format": "MEM: {used}GiB " },
+    "temperature": { "interval": 1, "hwmon-path": ["/sys/class/hwmon/hwmon0/temp1_input"], "format": "C: {temperatureC}°C " },
+    "temperature#gpu": { "interval": 1, "hwmon-path": ["/sys/class/hwmon/hwmon2/temp1_input"], "format": "G: {temperatureC}°C " }
+}

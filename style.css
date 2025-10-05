@@ -1,0 +1,147 @@
+/*
+waybar-dotfiles Copyright (C) 2025 kernaltrap8
+This program comes with ABSOLUTELY NO WARRANTY
+This is free software, and you are welcome to redistribute it
+under certain conditions
+*/
+
+/* ============================= */
+/* General styling and fonts     */
+/* ============================= */
+* {
+    /* `otf-font-awesome` is required for icons */
+    font-family: FontAwesome, Roboto, Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    margin-bottom: -1px;
+    margin-top: -1px;
+    color: #8A2BE2;
+}
+
+window#waybar {
+    background-color: rgba(0, 0, 0, 1.0);
+    color: #ffffff;
+    transition-property: background-color;
+    transition-duration: 0.5s;
+}
+
+window#waybar.hidden {
+    opacity: 0.2;
+}
+
+/* ============================= */
+/* Workspace adjustments         */
+/* ============================= */
+/* Leftmost workspace: no left margin */
+.modules-left > widget:first-child > #workspaces {
+    margin-left: 0;
+}
+
+/* Rightmost workspace: no right margin */
+.modules-right > widget:last-child > #workspaces {
+    margin-right: 0;
+}
+
+/* ============================= */
+/* Button and tooltip styling    */
+/* ============================= */
+button {
+    /* Use box-shadow instead of border to avoid offset */
+    box-shadow: inset 0 -3px transparent;
+    border: none;
+    border-radius: 0;
+}
+
+tooltip * {
+    color: #ffffff;
+}
+
+/* Hover effect for buttons */
+button:hover {
+    background: inherit;
+    box-shadow: inset 0 -3px #ffffff; /* white underline on hover */
+}
+
+/* ============================= */
+/* Taskbar buttons               */
+/* ============================= */
+#taskbar button {
+    transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+#taskbar button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    opacity: 0.9;
+}
+
+/* ============================= */
+/* General module spacing        */
+/* ============================= */
+#clock,
+#cpu,
+#memory,
+#temperature,
+#pulseaudio,
+#tray,
+#group-taskbar,
+#custom-media,
+#custom-gpu-pct,
+#custom-weather {
+    margin-left: 5px;
+    margin-right: 5px;
+    background-color: #000000;
+    font-size: 13px;
+}
+
+/* ============================= */
+/* Fine-tuned module configs     */
+/* ============================= */
+/* Start / Debian logo */
+#custom-start {
+    font-size: 16px;
+    margin-left: 10px;
+    margin-right: 18px;
+}
+
+/* Taskbar drawer root */
+#custom-taskbarroot {
+    font-size: 14px;
+    margin-left: 2px;
+    margin-right: 9px;
+}
+
+/* Media controls */
+#custom-next {
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+#custom-playpause {
+    font-size: 18px;
+}
+
+#custom-previous {
+    margin-right: 8px;
+    color: #8A2BE2;
+}
+
+/* Stats & tray drawers */
+#custom-statsroot {
+    margin-left: 5px;
+}
+
+#custom-trayroot {
+    margin-right: 10px;
+}
+
+/* Hover effect and padding for drawers */
+#custom-statsroot,
+#custom-trayroot {
+    padding: 3px 5px; /* top/bottom 3px, left/right 5px */
+    transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+#custom-statsroot:hover,
+#custom-trayroot:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    opacity: 0.9;
+}
