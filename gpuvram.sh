@@ -5,6 +5,8 @@
 # This is free software, and you are welcome to redistribute it
 # under certain conditions
 
+kill $(pgrep -f "$(basename "$0")" | grep -v "^$$\$") 2>/dev/null || true
+
 # Get VRAM usage in bytes from AMD GPU
 vram_used_bytes=$(cat /sys/class/drm/card0/device/mem_info_vram_used 2>/dev/null)
 

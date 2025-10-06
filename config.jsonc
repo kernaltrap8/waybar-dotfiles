@@ -145,7 +145,7 @@
         "timezone": "America/Chicago",
         "format": "{:%I:%M %p}",
         "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
-        "format-alt": "{:%m/%d/%Y} "
+        "format-alt": "{:%m/%d/%Y}"
     },
 
     "cpu": { "interval": 1, "format": "CPU: {usage}% ", "tooltip": false },

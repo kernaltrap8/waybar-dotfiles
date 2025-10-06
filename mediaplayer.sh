@@ -5,26 +5,14 @@
 # This is free software, and you are welcome to redistribute it
 # under certain conditions
 
-# kill previous instances of the script, prevents zombie processes when waybar is killed or restarted.
-if [[ "$1" == "controlinfo" || "$1" == "mediainfo" ]]; then
-    pgrep -f "$0 $1" | grep -v "^$$\$" | xargs -r kill
+set -euo pipefail
+
+# kill previous instances of the same mode
+if [[ "${1-}" == "controlinfo" || "${1-}" == "mediainfo" ]]; then
+    pgrep -f "$0 ${1-}" | grep -v "^$$\$" | xargs -r kill || true
 fi
 
-ytmn=$(playerctl -l | grep 'chromium')
-#ytmn=$(
-#playerctl -l | grep 'chromium' | while read p; do
-#    album=$(playerctl -p "$p" metadata xesam:album 2>/dev/null)
-#    if [[ -n "$album" ]]; then
-#        echo "$p"
-#        break
-#    fi
-#done
-#)
-sleep_interval=1
-prev_status_media=""
-prev_status_playpause=""
-prev_text=""
-prev_tooltip=""
+ytmn=$(playerctl -l 2>/dev/null | grep 'chromium' || true)
 pause=""
 play=""
 
@@ -37,124 +25,90 @@ check_spotify() {
 }
 
 dbg() {
-	echo "called : ${FUNCNAME[0]}"
-	echo $ytmn
+    echo "called : ${FUNCNAME[0]}"
+    echo "${ytmn-}"
+}
+
+# Fallback when no player is found
+no_player_output() {
+    echo '{"class": "", "text": "", "tooltip": ""}'
+    pkill -RTMIN+5 waybar || true
 }
 
 mediainfo() {
-	dbg
-    while true; do
-        if ! check_spotify; then
-            new_text=""
-            new_tooltip=""
-            pkill -RTMIN+5 waybar
-            if [[ "$prev_text" != "$new_text" || "$prev_tooltip" != "$new_tooltip" ]]; then
-                echo "{\"class\": \"\", \"text\": \"$new_text\", \"tooltip\": \"$new_tooltip\"}"
-                prev_text="$new_text"
-                prev_tooltip="$new_tooltip"
-            fi
-            sleep $sleep_interval
-            continue
-        fi
-        status=$(playerctl -p "$ytmn" status 2>/dev/null)
-        artist=$(playerctl -p "$ytmn" metadata xesam:artist 2>/dev/null)
-        title=$(playerctl -p "$ytmn" metadata xesam:title 2>/dev/null)
-        album=$(playerctl -p "$ytmn" metadata xesam:album 2>/dev/null)
+    dbg
+    if ! check_spotify; then
+        no_player_output
+        exit 0
+    fi
 
-        artist=$(sanitize "$artist")
-        title=$(sanitize "$title")
-        album=$(sanitize "$album")
+    prev_status_media=""
+    prev_text=""
+    prev_tooltip=""
 
-        if [[ -z $status || -z $artist || -z $title ]]; then
-            sleep $sleep_interval
-            continue
-        fi
+    playerctl -p "$ytmn" metadata --format '{{status}}|{{xesam:artist}}|{{xesam:title}}|{{xesam:album}}' --follow | \
+    while IFS='|' read -r status artist title album; do
+        artist=$(sanitize "${artist-}")
+        title=$(sanitize "${title-}")
+        album=$(sanitize "${album-}")
+
+        [[ -z $status || -z $artist || -z $title ]] && continue
 
         new_class=""
-        if [[ $status == "Playing" ]]; then
-            new_class="playing"
-        elif [[ $status == "Paused" ]]; then
-            new_class="paused"
-        fi
+        [[ $status == "Playing" ]] && new_class="playing"
+        [[ $status == "Paused" ]] && new_class="paused"
+
         new_text="$artist - $title"
         new_tooltip="$artist - $title - $album"
 
         if [[ "$prev_status_media" != "$status" || "$prev_text" != "$new_text" || "$prev_tooltip" != "$new_tooltip" ]]; then
             echo "{\"class\": \"$new_class\", \"text\": \"$new_text\", \"tooltip\": \"$new_tooltip\"}"
-            pkill -RTMIN+5 waybar
+            pkill -RTMIN+5 waybar || true
             prev_status_media="$status"
             prev_text="$new_text"
             prev_tooltip="$new_tooltip"
         fi
-        sleep $sleep_interval
     done
 }
 
 controlinfo() {
-	dbg
-    while true; do
-        # Check if Spotify is running
-        if ! check_spotify; then
-            new_status="$play"
-            if [[ "$prev_status_playpause" != "$new_status" ]]; then
-                echo "{\"text\": \"$play\"}"
-                pkill -RTMIN+5 waybar
-                prev_status_playpause="$new_status"
-            fi
-            sleep $sleep_interval
-            continue
-        fi
+    dbg
+    if ! check_spotify; then
+        echo "{\"text\": \"$play\"}"
+        pkill -RTMIN+5 waybar || true
+        exit 0
+    fi
 
-        # Get player status and sanitize it
-        status=$(playerctl -p "$ytmn" status 2>/dev/null)
-        status=$(sanitize "$status")
+    prev_status_playpause=""
 
-        # Skip iteration if status is empty
-        if [[ -z "$status" ]]; then
-            sleep $sleep_interval
-            continue
-        fi
+    playerctl -p "$ytmn" status --follow | while read -r status; do
+        status=$(sanitize "${status-}")
+        [[ -z "$status" ]] && continue
 
-        # Determine the new status based on the player status
         if [[ "$status" == "Playing" ]]; then
             new_status="$pause"
-        elif [[ "$status" == "Paused" ]]; then
-            new_status="$play"
         else
-            # Fallback to a default value if status is unexpected
             new_status="$play"
         fi
 
-        # Update Waybar if the status has changed
         if [[ "$prev_status_playpause" != "$new_status" ]]; then
             echo "{\"text\": \"$new_status\"}"
-            pkill -RTMIN+5 waybar
+            pkill -RTMIN+5 waybar || true
             prev_status_playpause="$new_status"
         fi
-
-        sleep $sleep_interval
     done
 }
 
 control() {
-	case "$1" in
-		playpause)
-			playerctl -p "$ytmn" play-pause
-			;;
-		next)
-			playerctl -p "$ytmn" next
-			;;
-		previous)
-			playerctl -p "$ytmn" previous
-			;;
-		*)
-			echo "Unknown command: $1"
-			exit 1
-			;;
-	esac
+    case "${1-}" in
+        playpause) playerctl -p "$ytmn" play-pause ;;
+        next)      playerctl -p "$ytmn" next ;;
+        previous)  playerctl -p "$ytmn" previous ;;
+        *)         echo "Unknown command: $1"; exit 1 ;;
+    esac
 }
 
-case "$1" in
+case "${1-}" in
     control)
         shift
         control "$@"
@@ -164,11 +118,11 @@ case "$1" in
         controlinfo "$@"
         ;;
     mediainfo)
-    	shift
-    	mediainfo "$@"
-    	;;
+        shift
+        mediainfo "$@"
+        ;;
     *)
-        echo "Invalid command: $1"
+        echo "Invalid command: ${1-}"
         exit 1
         ;;
 esac

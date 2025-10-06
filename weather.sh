@@ -8,7 +8,7 @@
 # bash setup
 set -euo pipefail
 ERROR_FILE="$HOME/scripts/weather-error.log"
-exec 2>>"$ERROR_FILE"
+#exec 2>>"$ERROR_FILE"
 
 # constants
 CITY="Wichita"
@@ -68,41 +68,56 @@ function main() {
 	while true; do
 	    echo "{\"text\": \"Getting weather...\", \"tooltip\": \"Weather in $CITY\"}"
 	    
-	    # Dynamically get grid info
+	    # Get observation station
 	    POINT_DATA=$(curl -s --max-time 10 "https://api.weather.gov/points/${LAT},${LON}")
-	    WFO=$(echo "$POINT_DATA" | jq -r '.properties.gridId')
-	    X=$(echo "$POINT_DATA" | jq -r '.properties.gridX')
-	    Y=$(echo "$POINT_DATA" | jq -r '.properties.gridY')
+	    STATIONS_URL=$(echo "$POINT_DATA" | jq -r '.properties.observationStations')
 	    
 	    # fallback if API fails
-	    if [ -z "$WFO" ] || [ -z "$X" ] || [ -z "$Y" ] || [ "$WFO" = "null" ]; then
+	    if [ -z "$STATIONS_URL" ] || [ "$STATIONS_URL" = "null" ]; then
 	        echo "{\"text\": \"--\", \"tooltip\": \"Weather unavailable\"}"
 	        sleep $SLEEP_INTERVAL
 	        continue
 	    fi
 	    
-	    ENDPOINT="https://api.weather.gov/gridpoints/${WFO}/${X},${Y}/forecast/hourly"
+	    # Get the nearest observation station
+	    STATION_ID=$(curl -s --max-time 10 "$STATIONS_URL" | jq -r '.observationStations[0]')
 	    
-	    # Fetch hourly forecast
-	    FORECAST=$(curl -s --max-time 10 "$ENDPOINT")
-	    log FORECAST
+	    if [ -z "$STATION_ID" ] || [ "$STATION_ID" = "null" ]; then
+	        echo "{\"text\": \"--\", \"tooltip\": \"Weather unavailable\"}"
+	        sleep $SLEEP_INTERVAL
+	        continue
+	    fi
 	    
-	    # Get current time in same format as API
-	    CURRENT_TIME=$(date +"%Y-%m-%dT%H:%M:%S%:z")
+	    # Fetch current observations
+	    OBSERVATIONS=$(curl -s --max-time 10 "${STATION_ID}/observations/latest")
+	    log OBSERVATIONS
 	    
-	    # Find the current period
-	    data=$(echo "$FORECAST" | jq --arg now "$CURRENT_TIME" '
-	        [.properties.periods[] | select(.startTime <= $now and .endTime > $now)][0] // 
-	        .properties.periods[0]')
+	    # Extract data
+	    data=$(echo "$OBSERVATIONS" | jq '.properties')
 	    log data
 	    
-	    cond=$(echo "$data" | jq -r '.shortForecast // "Unknown"')
+	    cond=$(echo "$data" | jq -r '.textDescription // "Unknown"')
 	    log cond
-	    temp=$(echo "$data" | jq -r '.temperature // "--"')
+	    
+	    # Temperature is in Celsius, convert to Fahrenheit
+	    temp_c=$(echo "$data" | jq -r '.temperature.value // "null"')
+	    if [ "$temp_c" = "null" ] || [ -z "$temp_c" ]; then
+	        temp="--"
+	        unit="F"
+	    else
+	        temp=$(printf "%.0f" "$(echo "($temp_c * 9/5) + 32" | bc -l)")
+	        unit="F"
+	    fi
 	    log temp
-	    unit=$(echo "$data" | jq -r '.temperatureUnit // "F"')
 	    log unit
-	    is_daytime=$(echo "$data" | jq -r '.isDaytime')
+	    
+	    # Determine if daytime (simple check: between 6 AM and 6 PM local time)
+	    current_hour=$(date +"%H")
+	    if [ "$current_hour" -ge 6 ] && [ "$current_hour" -lt 18 ]; then
+	        is_daytime="true"
+	    else
+	        is_daytime="false"
+	    fi
 	    log is_daytime
 	    
 	    # Emoji mapping
@@ -110,7 +125,7 @@ function main() {
 	    if [ "$is_daytime" = "false" ]; then
 	        # Night emojis
 	        case "$cond" in
-	            *Clear*|*Sunny*) emoji="🌙" ;;
+	            *Clear*|*Sunny*|*Fair*) emoji="🌙" ;;
 	            *Cloudy*|*Overcast*) emoji="🌃" ;;
 	            *"Partly Cloudy"*|*"Mostly Cloudy"*|*"Mostly Clear"*) emoji="🌃" ;;
 	            *Showers*|*Rain*|*Drizzle*) emoji="🌧️" ;;
@@ -121,7 +136,7 @@ function main() {
 	    else
 	        # Day emojis
 	        case "$cond" in
-	            *Clear*|*Sunny*) emoji="☀️" ;;
+	            *Clear*|*Sunny*|*Fair*) emoji="☀️" ;;
 	            *Cloudy*|*Overcast*) emoji="☁️" ;;
 	            *"Partly Cloudy"*|*"Mostly Cloudy"*) emoji="⛅" ;;
 	            *Showers*|*Rain*|*Drizzle*) emoji="🌧️" ;;

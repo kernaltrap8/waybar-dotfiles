@@ -110,18 +110,19 @@ button:hover {
 }
 
 /* Media controls */
-#custom-next {
-    margin-left: 5px;
-    margin-right: 5px;
+#custom-previous {
+    margin-right: 8.5px;
+    color: #8A2BE2;
 }
 
 #custom-playpause {
     font-size: 18px;
+    padding-right: 1px;
 }
 
-#custom-previous {
-    margin-right: 8px;
-    color: #8A2BE2;
+#custom-next {
+    margin-left: 5px;
+    margin-right: 5px;
 }
 
 /* Stats & tray drawers */
