@@ -7,34 +7,42 @@
 
 # bash setup
 set -euo pipefail
-ERROR_FILE="$HOME/scripts/weather-error.log"
-#exec 2>>"$ERROR_FILE"
+ERROR_FILE="$PWD/weather-error.log"
+exec 2>>"$ERROR_FILE"
 
 # constants
 CITY="Wichita"
 LAT=37.6872
 LON=-97.3301
 SLEEP_INTERVAL=3600
-LOG_FILE="$HOME/scripts/weather.log"
+LOG_FILE="$PWD/weather.log"
 
 # bools
 isLogEnabled=1
 
 # logging setup
-mkdir -p "$HOME/scripts"
 > "$LOG_FILE"
 > "$ERROR_FILE"
 
 # this is pretty cursed because now the
 # calling convention is log my_var instead of
 # log "$my_var"
-function log() {
+function log_var() {
 	if [[ $isLogEnabled -eq 0 ]]; then
 		return
 	fi
-    local var_name=$1
-    local var_value=${!var_name}
-    printf '[%s] %s: %s\n' "$(date +"%Y/%m/%d-%H:%M:%S")" "$var_name" "$var_value" >> "$LOG_FILE"
+	local var_name=$1
+	local var_value=${!var_name}
+	printf '[%s] %s: %s\n' "$(date +"%Y/%m/%d-%H:%M:%S")" "$var_name" "$var_value" >> "$LOG_FILE"
+}
+
+function log_msg() {
+	if [[ $isLogEnabled -eq 0 ]]; then
+		return
+	fi
+	local var_value="$1"
+	local caller="${FUNCNAME[1]}"
+	printf '[%s] %s: %s\n' "$(date +"%Y/%m/%d-%H:%M:%S")" "$caller" "$var_value" >> "$LOG_FILE"
 }
 
 function check_args() {
@@ -70,7 +78,9 @@ function main() {
 	    
 	    # Get observation station
 	    POINT_DATA=$(curl -s --max-time 10 "https://api.weather.gov/points/${LAT},${LON}")
+	    log_var POINT_DATA
 	    STATIONS_URL=$(echo "$POINT_DATA" | jq -r '.properties.observationStations')
+	    log_var STATIONS_URL
 	    
 	    # fallback if API fails
 	    if [ -z "$STATIONS_URL" ] || [ "$STATIONS_URL" = "null" ]; then
@@ -81,6 +91,7 @@ function main() {
 	    
 	    # Get the nearest observation station
 	    STATION_ID=$(curl -s --max-time 10 "$STATIONS_URL" | jq -r '.observationStations[0]')
+	    log_var STATION_ID
 	    
 	    if [ -z "$STATION_ID" ] || [ "$STATION_ID" = "null" ]; then
 	        echo "{\"text\": \"--\", \"tooltip\": \"Weather unavailable\"}"
@@ -90,17 +101,19 @@ function main() {
 	    
 	    # Fetch current observations
 	    OBSERVATIONS=$(curl -s --max-time 10 "${STATION_ID}/observations/latest")
-	    log OBSERVATIONS
+	    log_var OBSERVATIONS
 	    
 	    # Extract data
 	    data=$(echo "$OBSERVATIONS" | jq '.properties')
-	    log data
+	    log_var data
 	    
 	    cond=$(echo "$data" | jq -r '.textDescription // "Unknown"')
-	    log cond
-	    
-	    # Temperature is in Celsius, convert to Fahrenheit
 	    temp_c=$(echo "$data" | jq -r '.temperature.value // "null"')
+	    
+	    log_var cond
+	    log_var temp_c
+	        
+	    # Temperature is in Celsius, convert to Fahrenheit
 	    if [ "$temp_c" = "null" ] || [ -z "$temp_c" ]; then
 	        temp="--"
 	        unit="F"
@@ -108,8 +121,8 @@ function main() {
 	        temp=$(printf "%.0f" "$(echo "($temp_c * 9/5) + 32" | bc -l)")
 	        unit="F"
 	    fi
-	    log temp
-	    log unit
+	    log_var temp
+	    log_var unit
 	    
 	    # Determine if daytime (simple check: between 6 AM and 6 PM local time)
 	    current_hour=$(date +"%H")
@@ -118,7 +131,7 @@ function main() {
 	    else
 	        is_daytime="false"
 	    fi
-	    log is_daytime
+	    log_var is_daytime
 	    
 	    # Emoji mapping
 	    emoji="❓"
@@ -145,18 +158,43 @@ function main() {
 	            *Fog*|*Mist*|*Haze*) emoji="🌫️" ;;
 	        esac
 	    fi
-	    log emoji
+	    log_var emoji
 	    
 	    # Prefix + if non-negative number
 	    if [[ "$temp" != "--" && "$temp" -ge 0 ]]; then
 	        temp="+$temp"
 	    fi
-	    log temp
+	    log_var temp
 	    output="{\"text\": \"$emoji  $temp°$unit\", \"tooltip\": \"$cond - Weather in $CITY\"}"
 	    # Output for Waybar
 	    echo "$output"
-	    log output
-	    log SLEEP_INTERVAL
+	    log_var output
+	    log_var SLEEP_INTERVAL
+	    
+	    # Check for empty/null values
+	    empty_vars=()
+	    vars_to_check=(
+	    	POINT_DATA
+	    	STATIONS_URL
+	    	STATION_ID
+	    	OBSERVATIONS
+	    	data
+				cond
+				temp_c
+				temp
+				unit
+				current_hour
+				is_daytime
+				emoji
+				output
+	    )
+	    for var in "${vars_to_check[@]}"; do
+	        [[ -z "${!var}" || "${!var}" = "null" ]] && empty_vars+=("$var")
+	    done
+	    if [ ${#empty_vars[@]} -gt 0 ]; then
+	        log_msg "WARNING: some values were empty! API is likely experiencing issues. Empty: ${empty_vars[*]}"
+	    fi
+	  
 	    sleep $SLEEP_INTERVAL
 	done	
 }

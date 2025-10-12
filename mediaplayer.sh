@@ -12,7 +12,12 @@ if [[ "${1-}" == "controlinfo" || "${1-}" == "mediainfo" ]]; then
     pgrep -f "$0 ${1-}" | grep -v "^$$\$" | xargs -r kill || true
 fi
 
-ytmn=$(playerctl -l 2>/dev/null | grep 'chromium' || true)
+if pgrep -x youtube-music > /dev/null; then
+    ytmn=$(playerctl -l 2>/dev/null | grep '^chromium.instance' | head -n1)
+else
+    ytmn=""
+fi
+
 pause=""
 play=""
 
