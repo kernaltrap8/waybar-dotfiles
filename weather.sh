@@ -7,22 +7,25 @@
 
 # bash setup
 set -euo pipefail
-ERROR_FILE="$PWD/weather-error.log"
-exec 2>>"$ERROR_FILE"
+RAND_STRING=$(tr -dc 'a-zA-Z0-9' <<< "$(echo $RANDOM$RANDOM)" | head -c5)
+LOG_PREFIX="/tmp/.weather.sh-${RAND_STRING}"
+ERROR_FILE="${LOG_PREFIX}/weather-error.log"
 
 # constants
 CITY="Wichita"
 LAT=37.6872
 LON=-97.3301
 SLEEP_INTERVAL=3600
-LOG_FILE="$PWD/weather.log"
+LOG_FILE="${LOG_PREFIX}/weather.log"
 
 # bools
 isLogEnabled=1
 
 # logging setup
+mkdir -p "${LOG_PREFIX}"
 > "$LOG_FILE"
 > "$ERROR_FILE"
+exec 2>>"$ERROR_FILE"
 
 # this is pretty cursed because now the
 # calling convention is log my_var instead of
