@@ -7,9 +7,7 @@
 
 # bash setup
 set -euo pipefail
-RAND_STRING=$(tr -dc 'a-zA-Z0-9' <<< "$(echo $RANDOM$RANDOM)" | head -c5)
-LOG_PREFIX="/tmp/.weather.sh-${RAND_STRING}"
-ERROR_FILE="${LOG_PREFIX}/weather-error.log"
+LOG_PREFIX="/tmp/weather-sh"
 
 # constants
 CITY="Wichita"
@@ -17,14 +15,25 @@ LAT=37.6872
 LON=-97.3301
 SLEEP_INTERVAL=3600
 LOG_FILE="${LOG_PREFIX}/weather.log"
+LOG_FILE_NO_EXT="${LOG_FILE%%.*}"
+ERROR_FILE="${LOG_PREFIX}/weather-error.log"
+ERROR_FILE_NO_EXT="${ERROR_FILE%%.*}"
 
 # bools
 isLogEnabled=1
 
 # logging setup
 mkdir -p "${LOG_PREFIX}"
-> "$LOG_FILE"
-> "$ERROR_FILE"
+
+rotate_log() {
+    local file="$1"
+    local base="${file%%.*}"
+    [[ -e "$file" ]] && mv "$file" "${base}-$(date '+%Y-%m-%d_%H%M%S').log"
+    > "$file"
+}
+
+rotate_log "$LOG_FILE"
+rotate_log "$ERROR_FILE"
 exec 2>>"$ERROR_FILE"
 
 # this is pretty cursed because now the
