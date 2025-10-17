@@ -65,7 +65,7 @@
 
     "custom/previous": {
         "format": "󰙣",
-        "on-click": "$HOME/.config/waybar/mediaplayer.sh control previous 2>/dev/null",
+        "on-click": "$HOME/.config/waybar/mediaplayer.sh control previous",
         "tooltip": false
     },
     "custom/playpause": {
@@ -73,13 +73,13 @@
         "return-type": "json",
         "max-length": 10,
         "escape": true,
-        "on-click": "$HOME/.config/waybar/mediaplayer.sh control playpause 2>/dev/null",
+        "on-click": "$HOME/.config/waybar/mediaplayer.sh control playpause",
         "tooltip": false,
-        "exec": "$HOME/.config/waybar/mediaplayer.sh controlinfo 2>/dev/null"
+        "exec": "$HOME/.config/waybar/mediaplayer.sh controlinfo"
     },
     "custom/next": {
         "format": "󰙡",
-        "on-click": "$HOME/.config/waybar/mediaplayer.sh control next 2>/dev/null",
+        "on-click": "$HOME/.config/waybar/mediaplayer.sh control next",
         "tooltip": false
     },
     "custom/media": {
@@ -88,7 +88,7 @@
         "max-length": 10000,
         "format-icons": { "default": "  " },
         "escape": true,
-        "exec": "$HOME/.config/waybar/mediaplayer.sh mediainfo 2> /dev/null"
+        "exec": "$HOME/.config/waybar/mediaplayer.sh mediainfo"
     },
 
     "custom/weather": {

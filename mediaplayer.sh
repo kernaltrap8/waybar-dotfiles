@@ -5,29 +5,42 @@
 # This is free software, and you are welcome to redistribute it
 # under certain conditions
 
-set -euo pipefail
+# TODO: prefix all functions with `function` for readability sake
+# TODO: there's probably some bad code in here. do some audits!
+
+set -eou pipefail
+> /tmp/mediaplayer.log
+# redirect trace output to a file for debugging
+exec 2> /tmp/mediaplayer.log
+set -x
 
 # kill previous instances of the same mode
 if [[ "${1-}" == "controlinfo" || "${1-}" == "mediainfo" ]]; then
     pgrep -f "$0 ${1-}" | grep -v "^$$\$" | xargs -r kill || true
 fi
 
-if pgrep -x youtube-music > /dev/null; then
+# hacky; we need to wait until the player spawns
+# otherwise the script will exit prematurely
+# because of `set -e`
+while ! playerctl -l 2>/dev/null | grep '^chromium.instance'; do
+    sleep .1
+done
+
+if pgrep -x youtube-music >/dev/null || true; then
     ytmn=$(playerctl -l 2>/dev/null | grep '^chromium.instance' | head -n1)
-else
-    ytmn=""
 fi
 
 pause=""
 play=""
 
+# remove any nasty characters that could be in our json
 sanitize() {
     echo "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'
 }
 
 dbg() {
-    echo "called : ${FUNCNAME[0]}"
-    echo "${ytmn-}"
+    echo "called : ${FUNCNAME[0]}" >&2
+    echo "${ytmn-}" >&2
 }
 
 # Fallback when no player is found
@@ -36,6 +49,7 @@ no_player_output() {
     pkill -RTMIN+5 waybar || true
 }
 
+# TODO: rename this to check_player
 check_spotify() {
     pgrep -x "youtube-music" > /dev/null
 }

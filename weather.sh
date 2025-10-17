@@ -157,6 +157,7 @@ function main() {
 	            *Thunder*|*Storm*) emoji="⛈️" ;;
 	            *Snow*|*Flurries*) emoji="❄️" ;;
 	            *Fog*|*Mist*|*Haze*) emoji="🌫️" ;;
+	            *Windy*) emoji="🌬️" ;;
 	        esac
 	    else
 	        # Day emojis
@@ -168,6 +169,7 @@ function main() {
 	            *Thunder*|*Storm*) emoji="⛈️" ;;
 	            *Snow*|*Flurries*) emoji="❄️" ;;
 	            *Fog*|*Mist*|*Haze*) emoji="🌫️" ;;
+	            *Windy*) emoji="🌬️" ;;
 	        esac
 	    fi
 	    log_var emoji
