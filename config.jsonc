@@ -143,9 +143,10 @@
 
     "clock": {
         "timezone": "America/Chicago",
-        "format": "{:%I:%M %p}",
+        "format": "{:%I:%M:%S %p}",
         "tooltip-format": "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
-        "format-alt": "{:%m/%d/%Y}"
+        "format-alt": "{:%m/%d/%Y}",
+        "interval": 1
     },
 
     "cpu": { "interval": 1, "format": "CPU: {usage}% ", "tooltip": false },

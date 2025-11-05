@@ -89,7 +89,7 @@ function main() {
 	    echo "{\"text\": \"Getting weather...\", \"tooltip\": \"Weather in $CITY\"}"
 	    
 	    # Get observation station
-	    POINT_DATA=$(curl -s --max-time 10 "https://api.weather.gov/points/${LAT},${LON}")
+	    POINT_DATA=$(curl -s --max-time 10 "https://api.weather.gov/points/${LAT},${LON}" || echo '{"text": "--", "tooltip": "Network unreachable"}')
 	    log_var POINT_DATA
 	    STATIONS_URL=$(echo "$POINT_DATA" | jq -r '.properties.observationStations')
 	    log_var STATIONS_URL

@@ -18,7 +18,7 @@ under certain conditions
 }
 
 window#waybar {
-    background-color: rgba(0, 0, 0, 1.0);
+    background-color: rgba(0, 0, 0, 0.65);
     color: #ffffff;
     transition-property: background-color;
     transition-duration: 0.5s;
@@ -88,7 +88,6 @@ button:hover {
 #custom-weather {
     margin-left: 5px;
     margin-right: 5px;
-    background-color: #000000;
     font-size: 13px;
 }
 
