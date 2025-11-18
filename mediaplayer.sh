@@ -14,6 +14,8 @@ set -eou pipefail
 exec 2> /tmp/mediaplayer.log
 set -x
 
+player="clementine"
+
 # kill previous instances of the same mode
 if [[ "${1-}" == "controlinfo" || "${1-}" == "mediainfo" ]]; then
     pgrep -f "$0 ${1-}" | grep -v "^$$\$" | xargs -r kill || true
@@ -22,12 +24,12 @@ fi
 # hacky; we need to wait until the player spawns
 # otherwise the script will exit prematurely
 # because of `set -e`
-while ! playerctl -l 2>/dev/null | grep '^chromium.instance'; do
+while ! playerctl -l 2>/dev/null | grep "$player"; do
     sleep .1
 done
 
 if pgrep -x youtube-music >/dev/null || true; then
-    ytmn=$(playerctl -l 2>/dev/null | grep '^chromium.instance' | head -n1)
+    ytmn=$(playerctl -l 2>/dev/null | grep "$player" | head -n1)
 fi
 
 pause=""
@@ -51,7 +53,7 @@ no_player_output() {
 
 # TODO: rename this to check_player
 check_spotify() {
-    pgrep -x "youtube-music" > /dev/null
+    pgrep -x "$player" > /dev/null
 }
 
 mediainfo() {
@@ -63,7 +65,7 @@ mediainfo() {
     while true; do
         # Update ytmn if player is running
         if check_spotify; then
-            ytmn=$(playerctl -l 2>/dev/null | grep '^chromium.instance' | head -n1 || true)
+            ytmn=$(playerctl -l 2>/dev/null | grep "$player" | head -n1 || true)
         else
             ytmn=""
         fi
@@ -118,7 +120,7 @@ controlinfo() {
     while true; do
         # Update ytmn if player is running
         if check_spotify; then
-            ytmn=$(playerctl -l 2>/dev/null | grep '^chromium.instance' | head -n1 || true)
+            ytmn=$(playerctl -l 2>/dev/null | grep "$player" | head -n1 || true)
         else
             ytmn=""
         fi
