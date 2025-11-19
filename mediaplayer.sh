@@ -14,7 +14,7 @@ set -eou pipefail
 exec 2> /tmp/mediaplayer.log
 set -x
 
-player="clementine"
+player="strawberry"
 
 # kill previous instances of the same mode
 if [[ "${1-}" == "controlinfo" || "${1-}" == "mediainfo" ]]; then
