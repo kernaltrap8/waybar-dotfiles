@@ -124,6 +124,20 @@ button:hover {
     margin-right: 5px;
 }
 
+/* Media controls animation(s) */
+#custom-previous:hover,
+#custom-playpause:hover,
+#custom-next:hover {
+    color: #D0B0F3;
+    opacity: 0.9;
+}
+
+#custom-previous,
+#custom-playpause,
+#custom-next {
+    transition: color 0.2s ease, opacity 0.2s ease;
+}
+
 /* Stats & tray drawers */
 #custom-statsroot {
     margin-left: 5px;
