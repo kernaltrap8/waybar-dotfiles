@@ -151,6 +151,6 @@
 
     "cpu": { "interval": 1, "format": "CPU: {usage}% ", "tooltip": false },
     "memory": { "interval": 1, "format": "MEM: {used}GiB " },
-    "temperature": { "interval": 1, "hwmon-path": ["/sys/class/hwmon/hwmon0/temp1_input"], "format": "C: {temperatureC}°C " },
-    "temperature#gpu": { "interval": 1, "hwmon-path": ["/sys/class/hwmon/hwmon2/temp1_input"], "format": "G: {temperatureC}°C " }
+    "temperature": { "interval": 1, "hwmon-path": ["/sys/class/hwmon/hwmon1/temp1_input"], "format": "C: {temperatureC}°C " },
+    "temperature#gpu": { "interval": 1, "hwmon-path": ["/sys/class/hwmon/hwmon3/temp1_input"], "format": "G: {temperatureC}°C " }
 }
